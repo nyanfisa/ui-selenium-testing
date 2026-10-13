@@ -27,6 +27,11 @@ class BasePage():
                 return False
             return True         
 
+    def is_element_clickable(self, how, what, timeout=10):
+        WebDriverWait(self.browser, timeout).until(
+            EC.is_clickable((how, what))
+        )
+             
     def get_text(self, how, what,  timeout=10):
         element = WebDriverWait(self.browser, timeout).until(
                             EC.visibility_of_element_located((how, what))
