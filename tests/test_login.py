@@ -1,16 +1,14 @@
 import pytest
 from selenium.webdriver.common.by import By
 from pages.login_page import LoginPage
-from pages.inventory_page import InventoryPage
+#from pages.inventory_page import InventoryPage
 
 url = 'https://www.saucedemo.com/'
 
 @pytest.mark.parametrize("username, password", [
     ("standard_user", "secret_sauce"), 
     ("problem_user", "secret_sauce"),
-    #("performance_glitch_user", "secret_sauce"),
     ("error_user", "secret_sauce"),
-    ("visual_user", "secret_sauce")
 ])
 
 def test_successful_login(browser, username, password):

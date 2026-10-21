@@ -1,58 +1,62 @@
 import pytest
-from selenium.webdriver.common.by import By
+#from selenium.webdriver.common.by import By
 
-def test_add_products_to_cart(logged_in_page):
-    products = [
-        "sauce-labs-backpack",
-        "sauce-labs-bike-light",
-        "sauce-labs-bolt-t-shirt",
-        "sauce-labs-fleece-jacket",
-    ]
-    for product in products:
-        logged_in_page.add_to_cart(product)
+class TestSorting:
 
-    #assert logged_in_page.get_cart_badge() == "4"
+    @pytest.mark.parametrize("sort_value, is_reverse, by_price", [
+        ("az",   False, False),
+        ("za",   True,  False),
+        ("lohi", False, True),
+        ("hilo", True,  True),
+    ])
+    def test_sorting(self, logged_in_page, sort_value, is_reverse, by_price):
+        # Берем данные до сортировки
+        if by_price:
+            before = logged_in_page.get_product_prices()
+        else:
+            before = logged_in_page.get_product_names()
 
-# BACKPACK_ADD_TO_CART = (By.ID, 'add-to-cart-sauce-labs-backpack')
-#     BACKPACK_REMOVE_FROM_CART = (By.ID, 'remove-sauce-labs-backpack')
-#     BACKPACK_PAGE_LINK = (By.ID, 'item_4_title_link')
+        # Применяем сортировку
+        logged_in_page.choose_sorting_type(sort_value)
 
-#     BIKE_LIGHT_ADD_TO_CART = (By.ID, 'add-to-cart-sauce-labs-bike-light')
-#     BIKE_LIGHT_REMOVE_FROM_CART = (By.ID, 'remove-sauce-labs-bike-light')
-#     BIKE_LIGHT_PAGE_LINK = (By.ID, 'item_0_title_link')
+        # Берем данные после сортировки
+        if by_price:
+            after = logged_in_page.get_product_prices()
+        else:
+            after = logged_in_page.get_product_names()
 
-#     TSHIRT_ADD_TO_CART = (By.ID, 'add-to-cart-sauce-labs-bolt-t-shirt')
-#     TSHIRT_REMOVE_FROM_CART = (By.ID, 'remove-sauce-labs-bolt-t-shirt')
-#     TSHIRT_PAGE_LINK = (By.ID, 'item_1_title_link')
+        # Сравниваем с ожидаемым порядком
+        expected = sorted(before, reverse=is_reverse)
+        assert after == expected, \
+            f"Сортировка '{sort_value}' не работает."
+            
 
-#     JACKET_ADD_TO_CART = (By.ID, 'add-to-cart-sauce-labs-fleece-jacket')
-#     JACKET_REMOVE_FROM_CART = (By.ID, 'remove-sauce-labs-fleece-jacket')
-#     JACKET_PAGE_LINK = (By.ID, 'item_5_title_link')
+    
+    @pytest.mark.parametrize("first, second", [
+    (("az",   False, False), ("lohi", False, True)),
+    (("hilo", True,  True),  ("za",   True,  False)),
+])
+    def test_sorting_sequence(self, logged_in_page, first, second):
+        first_sort, _, _ = first
+        second_sort, second_is_reverse, second_by_price = second
 
-#     ONESIE_ADD_TO_CART = (By.ID, 'add-to-cart-sauce-labs-onesie')
-#     ONESIE_REMOVE_FROM_CART = (By.ID, 'remove-sauce-labs-onesie')
-#     ONESIE_PAGE_LINK = (By.ID, 'item_2_title_link')
+        base_name_sort = logged_in_page.get_product_names()
+        base_price_sort = logged_in_page.get_product_prices()
 
-#     RED_TSHIRT_ADD_TO_CART = (By.ID, 'add-to-cart-test.allthethings()-t-shirt-(red)')
-#     RED_TSHIRT_REMOVE_FROM_CART = (By.ID, 'remove-test.allthethings()-t-shirt-(red)')
-#     RED_TSHIRT_PAGE_LINK = (By.ID, 'item_3_title_link')
+        # Применяем первую сортировку
+        logged_in_page.choose_sorting_type(first_sort)
 
+        # Применяем вторую сортировку
+        logged_in_page.choose_sorting_type(second_sort)
 
-# PRODUCTS = {
-#     "backpack": {
-#         "name": "Sauce Labs Backpack",
-#         "id": "sauce-labs-backpack",
-#     },
-#     "bolt_tshirt": {
-#         "name": "Sauce Labs Bolt T-Shirt",
-#         "id": "sauce-labs-bolt-t-shirt",
-#     },
-#     "fleece_jacket": {
-#         "name": "Sauce Labs Fleece Jacket",
-#         "id": "sauce-labs-fleece-jacket",
-#     }, 
-#     "test_allthethings_tshirt": {
-#         "name": "Test.allTheThings() T-Shirt (Red)",
-#         "id": "test.allthethings()-t-shirt-(red)",
-#     },   
-# }
+        if second_by_price:
+            second_sort_res = logged_in_page.get_product_prices()
+        else:
+            second_sort_res = logged_in_page.get_product_names()    
+
+        # Проверям, что вторая сортировка сработала корректно
+        if second_by_price:
+            expected = sorted(base_price_sort, reverse=second_is_reverse)
+        else:  
+            expected = sorted(base_name_sort, reverse=second_is_reverse)
+        assert second_sort_res == expected, f"Вторая сортировка '{second_sort}' не работает."
